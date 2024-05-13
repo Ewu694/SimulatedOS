@@ -3,4 +3,6 @@
 
 #include <iostream>
 
+class DiskManager{
+};
 #endif

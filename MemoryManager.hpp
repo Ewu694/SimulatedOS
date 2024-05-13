@@ -3,4 +3,7 @@
 
 #include <iostream>
 
+class MemoryManager{
+
+};
 #endif

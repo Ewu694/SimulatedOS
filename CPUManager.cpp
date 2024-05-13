@@ -24,3 +24,8 @@ void CPUManager::AddToReadyQueue(int PID){
 int CPUManager::getCurrentProcess(){
   return CPU;
 }
+
+void CPUManager::exitProcess(){
+  CPU = ready_queue.front();
+  ready_queue.pop_back();
+}

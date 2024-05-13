@@ -1,3 +1,18 @@
 #include <Process.hpp>
 
-enum STATE{NEW, READY, RUNNING, WAITING, TERMINATED}; //diff type of states for processes
+int Process::getPID(){
+  return PID;
+}
+
+void Process::setPID(int newPID){
+  PID = newPID;
+}
+
+STATE Process::getState(){
+  return pState;
+}
+
+void Process::setState(STATE currentState){
+  pState = currentState;
+}
+

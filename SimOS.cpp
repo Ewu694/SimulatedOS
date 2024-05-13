@@ -18,15 +18,38 @@ SimOS::SimOS(int numberOfDisks, unsigned long long amountOfRAM, unsigned int pag
 }
 
 void SimOS::NewProcess(){
-
+  Process newProcess;
+  if(PIDs.empty()){
+    newProcess.setPID(1);
+    newProcess.setState(RUNNING);
+  }
+  else{
+    newProcess.setPID(PIDs.size() + 1);
+    newProcess.setState(WAITING);
+  }
+  CPU.AddToReadyQueue(newProcess.getPID());
+  PIDs.insert({newProcess, newProcess.getPID()});
 }
 
 void SimOS::SimFork(){
-    
+  Process child;
+  child.setPID(CPU.getCurrentProcess() * 2);
+  child.setState(WAITING);
+  CPU.AddToReadyQueue(child.getPID());
+  PIDs.insert({child, child.getPID()});
 }
 
 void SimOS::SimExit(){
-
+  Process terminatingProcess;
+  for(auto it = PIDs.begin(); it != PIDs.end(); ++it){
+    if((it->second == (CPU.getCurrentProcess() / 2 == 0)) && it->first.getState() == WAITING)
+    { 
+      
+    }
+    if (it->second == CPU.getCurrentProcess())
+      terminatingProcess = it->first;
+  PIDs.erase(terminatingProcess);
+  }
 }
 
 void SimOS::SimWait(){
