@@ -8,10 +8,11 @@ class CPUManager{
   public:
     CPUManager();
     CPUManager(int CPU);
-    void AddToReadyQueue(int PID);//if ready queue is empty send PID to CPU, else add to ready queue
+    void addToReadyQueue(int PID);//if ready queue is empty send PID to CPU, else add to ready queue
     std::deque<int> getReadyQueue();
     int getCurrentProcess();
     void exitProcess();
+    bool isReadyQueueEmpty();
 
   private:
     std::deque<int> ready_queue;

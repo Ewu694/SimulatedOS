@@ -12,7 +12,7 @@ std::deque<int> CPUManager::getReadyQueue(){
   return ready_queue;
 }
 
-void CPUManager::AddToReadyQueue(int PID){
+void CPUManager::addToReadyQueue(int PID){
   if(ready_queue.empty()){
     CPU = PID;
   }
@@ -29,3 +29,11 @@ void CPUManager::exitProcess(){
   CPU = ready_queue.front();
   ready_queue.pop_back();
 }
+
+bool CPUManager::isReadyQueueEmpty(){
+  if(ready_queue.empty())
+    return true;
+  else
+    return false;
+}
+

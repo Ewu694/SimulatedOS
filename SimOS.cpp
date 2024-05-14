@@ -1,7 +1,7 @@
 #include <SimOS.h>
 
 struct FileReadRequest{
-    int  PID{0};
+    int PID{0};
     std::string fileName{""};
 };
  
@@ -19,37 +19,39 @@ SimOS::SimOS(int numberOfDisks, unsigned long long amountOfRAM, unsigned int pag
 
 void SimOS::NewProcess(){
   Process newProcess;
-  if(PIDs.empty()){
-    newProcess.setPID(1);
+  newProcess.setPID(processCount);
+  if(CPU.getCurrentProcess() == 0){
     newProcess.setState(RUNNING);
   }
-  else{
-    newProcess.setPID(PIDs.size() + 1);
+  else if(CPU.getCurrentProcess() != 0){
     newProcess.setState(WAITING);
   }
-  CPU.AddToReadyQueue(newProcess.getPID());
-  PIDs.insert({newProcess, newProcess.getPID()});
+  CPU.addToReadyQueue(newProcess.getPID());
+  Parents.push_back(newProcess);
+  processCount++;
 }
 
 void SimOS::SimFork(){
-  Process child;
-  child.setPID(CPU.getCurrentProcess() * 2);
-  child.setState(WAITING);
-  CPU.AddToReadyQueue(child.getPID());
-  PIDs.insert({child, child.getPID()});
+  Process child;  
+  child.setPID(processCount);
+  if(CPU.getCurrentProcess() == 0){
+    child.setState(RUNNING);
+  }
+  else if(CPU.getCurrentProcess() != 0){
+    child.setState(WAITING);
+  }
+  CPU.addToReadyQueue(child.getPID());
+  for(int i = 0; i < Parents.size(); i++){
+    if(Parents[i].getPID() == CPU.getCurrentProcess()){
+      Children.insert({child, Parents[i]});
+    }
+  }
+  processCount++;
 }
 
 void SimOS::SimExit(){
   Process terminatingProcess;
-  for(auto it = PIDs.begin(); it != PIDs.end(); ++it){
-    if((it->second == (CPU.getCurrentProcess() / 2 == 0)) && it->first.getState() == WAITING)
-    { 
-      
-    }
-    if (it->second == CPU.getCurrentProcess())
-      terminatingProcess = it->first;
-  PIDs.erase(terminatingProcess);
-  }
+
 }
 
 void SimOS::SimWait(){
@@ -57,7 +59,8 @@ void SimOS::SimWait(){
 }
 
 void SimOS::TimerInterrupt(){
-  
+    CPU.addToReadyQueue(CPU.getReadyQueue().front());
+    CPU.getReadyQueue().pop_front();
 }
 
 void SimOS::DiskReadRequest(int diskNumber, std::string fileName){
@@ -65,7 +68,7 @@ void SimOS::DiskReadRequest(int diskNumber, std::string fileName){
 }
 
 void SimOS::DiskJobCompleted(int diskNumber){
-
+  
 }
 
 void SimOS::AccessMemoryAddress(unsigned long long address){
@@ -81,7 +84,7 @@ std::deque<int> SimOS::GetReadyQueue(){
 }
 
 MemoryUsage SimOS::GetMemory(){
-
+  return memory;
 }
 
 FileReadRequest SimOS::GetDisk(int diskNumber){

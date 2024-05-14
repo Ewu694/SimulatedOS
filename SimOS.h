@@ -35,13 +35,16 @@ class SimOS{
     std::deque<FileReadRequest> GetDiskQueue(int diskNumber); //GetDiskQueue returns the I/O-queue of the specified disk starting from the “next to be served” process.
   
   private:
+    int processCount = 1;
     int num_disks;
     unsigned long long total_RAM;
     unsigned int page_size;
     CPUManager CPU;
     DiskManager disks;
     MemoryManager RAM;
-    std::unordered_map<Process, int> PIDs;
+    std::vector<Process> Parents;
+    std::unordered_map<Process, Process> Children;
+    MemoryUsage memory;
 };
 
 #endif
