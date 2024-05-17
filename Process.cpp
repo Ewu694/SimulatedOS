@@ -2,7 +2,7 @@
 
 Process::Process() = default;
 
-int Process::getPID() const{
+int Process::getPID(){
   return PID;
 }
 

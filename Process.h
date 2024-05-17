@@ -14,7 +14,7 @@ enum TYPE{REGULAR, CHILD, PARENT, ZOMBIE};
 class Process{
   public:
     Process();
-    int getPID() const;    
+    int getPID();    
     int getState();
     TYPE getType();
     int getParentPID();

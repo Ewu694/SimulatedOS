@@ -17,7 +17,7 @@ void SimOS::SimFork(){
 }
 
 void SimOS::SimExit(){
-  RAM.findAndClearMemoryUsedByAProcess(CPU.getCurrentProcess());  
+  RAM.clearMemory(CPU.getCurrentProcess());  
   CPU.exitProcess();
 }
 
@@ -41,7 +41,7 @@ void SimOS::DiskJobCompleted(int diskNumber){
 
 void SimOS::AccessMemoryAddress(unsigned long long address){
   if(CPU.getCurrentProcess() == 0)
-    RAM.accessMemoryAtAddress(CPU.getCurrentProcess(), address);
+    RAM.accessAddress(CPU.getCurrentProcess(), address);
 }
 
 int SimOS::GetCPU(){
