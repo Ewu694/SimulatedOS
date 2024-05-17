@@ -6,6 +6,7 @@
 #include "MemoryManager.h"
 #include "Process.cpp"
 #include "Process.h"
+#include "SimOS.cpp"
 #include "SimOS.h"
 
 int main()
