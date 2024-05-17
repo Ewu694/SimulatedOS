@@ -7,7 +7,7 @@ constexpr int RUNNING{2};
 constexpr int WAITING{3};
 constexpr int TERMINATED{4};
 
-enum TYPE{CHILD, PARENT, ZOMBIE};
+enum TYPE{REGULAR, CHILD, PARENT, ZOMBIE};
 
 #include <iostream>
 
@@ -17,13 +17,16 @@ class Process{
     int getPID() const;    
     int getState();
     TYPE getType();
+    int getParentPID();
     void setPID(int newPID);
     void setState(int currentState);
     void setType(TYPE currentType);
+    void setParent(int PID);
   private:
     int PID;
     int pState;
     TYPE pType;
+    int parentPID;
 };
 
 #endif

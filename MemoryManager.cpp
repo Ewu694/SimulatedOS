@@ -3,8 +3,8 @@
 
 MemoryManager::MemoryManager() = default;
 
-MemoryManager::MemoryManager(unsigned long long ramSize, unsigned int pageS){
-    ramSize = ramSize;
+MemoryManager::MemoryManager(const unsigned long long& ram, const unsigned int& pageS){
+    ramSize = ram;
     pageSize = pageS;
     numPages = ramSize/pageS;
     MemoryItem temp{0, 0, 0};
@@ -13,42 +13,42 @@ MemoryManager::MemoryManager(unsigned long long ramSize, unsigned int pageS){
     }
 }
 
-void MemoryManager::setRAMSize(unsigned long long ramSize)
+void MemoryManager::setRAMSize(const unsigned long long& ram)
 {
-    ramSize = ramSize;
+    ramSize = ram;
 }
 
-void MemoryManager::setPageSize(unsigned int pageS)
+void MemoryManager::setPageSize(const unsigned int& pageS)
 {
     pageSize = pageS;
 }
 
-void MemoryManager::setMemoryUsage(MemoryUsage memoryU)
+void MemoryManager::setMemoryUsage(const MemoryUsage& memoryU)
 {
     memory = memoryU;
 }
 
-unsigned long long MemoryManager::getRAMSize()
+unsigned long long MemoryManager::getRAMSize() const
 {
     return ramSize;
 }
 
-unsigned int MemoryManager::getPageSize() 
+unsigned int MemoryManager::getPageSize() const
 {
     return pageSize;
 }
 
-MemoryUsage MemoryManager::getMemoryUsage() 
+MemoryUsage MemoryManager::getMemoryUsage() const
 {
     return memory;
 }
 
-unsigned long long MemoryManager::getPageNumber(unsigned long long address)
+unsigned long long MemoryManager::getPageNumber(const unsigned long long& address)
 {
     return address / pageSize;
 }
 
-void MemoryManager::accessMemoryAtAddress(int processID, unsigned long long address)
+void MemoryManager::accessMemoryAtAddress(const int& processID, const unsigned long long& address)
 {
     MemoryItem memoryAccess; //initialize temp memory access to prep 
     memoryAccess.pageNumber = address / pageSize;
@@ -72,7 +72,7 @@ void MemoryManager::accessMemoryAtAddress(int processID, unsigned long long addr
         memory.push_back(memoryAccess);
 }
 
-void MemoryManager::findAndClearMemoryUsedByAProcess(int processID)
+void MemoryManager::findAndClearMemoryUsedByAProcess(const int& processID)
 {
     for(auto i = memory.begin(); i != memory.end(); ++i)
     {

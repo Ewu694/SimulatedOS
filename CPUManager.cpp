@@ -17,7 +17,7 @@ void CPUManager::setCurrentProcess(Process process){
   currProcess = process;
 }
 
-void CPUManager::addToReadyQueue(Process &newProcess){//if the CPU is empty, set it to the running process, else add it to the ready queue
+void CPUManager::addToReadyQueue(Process newProcess){//if the CPU is empty, set it to the running process, else add it to the ready queue
   if(ready_queue.empty()){
     CPU = newProcess.getPID();
     newProcess.setState(2);
@@ -35,10 +35,10 @@ int CPUManager::getCurrentProcess(){ //returns PID of current process
 
 void CPUManager::exitProcess(){//sets the process in the front of the ready queue to running and pops it from the top of ready queue
   if(currProcess.getType() == PARENT){
-    findParent();
+    findChildrenAndTerminate();
   }
   if(currProcess.getType() == CHILD){
-     findChild();
+     findParentAndTerminate();
   }
   CPU = ready_queue.front();
   ready_queue.pop_front(); 
@@ -54,6 +54,7 @@ bool CPUManager::isReadyQueueEmpty(){
 
 void CPUManager::createProcess(){
   Process newProcess;
+  newProcess.setType(REGULAR);
   newProcess.setPID(processCount);
   if(getCurrentProcess() == 0){
     newProcess.setState(2);
@@ -69,57 +70,52 @@ void CPUManager::createProcess(){
 void CPUManager::forkProcess(){
   Process child;   
   child.setPID(processCount);
-  if(getCurrentProcess() == 0){
-    child.setState(2);
-  }
-  else if(getCurrentProcess() != 0){ 
-    child.setState(1);
-  }
+  child.setState(1);
   addToReadyQueue(child);
   for(int i = 0; i < Processes.size(); ++i){
     if(Processes[i].getPID() == getCurrentProcess()){
       Processes[i].setType(PARENT);
       child.setType(CHILD);
-      Children.insert({child, Processes[i].getPID()});
+      child.setParent(getCurrentProcess());
     }
   }
   processCount++;
 }
 
 bool CPUManager::isChild(Process process){
-  for(auto it = Children.begin(); it != Children.end(); ++it){
-    if(it->first.getPID() == process.getPID()){
+  for(int i = 0; i < Children.size(); ++i){
+    if(Children[i].getPID() == process.getPID()){
       return true;
-      break;
     }
   }
+  return false;
 }
 
-void CPUManager::findParent(){
-  int i = 0; //init parser for processes vector
-  for(auto it = Children.begin(); it != Children.end(); ++it){
-    if((currProcess.getPID() == it->first.getPID()) && it->second == Processes[i].getPID() && (Processes[i].getState() == WAITING)){ //if this is the parent of the current child process then 
-      int j = 0;
-      for(auto childIter = Children.begin(); childIter != Children.end(); ++childIter){//terminates children of current process
-        if((currProcess.getPID() == childIter->second) && childIter->first.getPID() == Processes[j].getPID()){//if this current process is the parent, terminate its child
-          Processes.erase(Processes.begin() + j);
+void CPUManager::findChildrenAndTerminate(){
+  int parentIterator = 0;
+  for(int i = 0; i < Children.size(); ++i){
+    if(currProcess.getPID() == Children[i].getPID() && Children[i].getParentPID() == Processes[parentIterator].getPID() && (Processes[parentIterator].getState() == WAITING)){ //if this is the parent of the current child process then 
+      int childIterator = 0;
+      for(int j = 0; j < Children.size(); ++j){//terminates children of current process
+        if((currProcess.getPID() == Children[j].getParentPID()) && Children[j].getPID() == Processes[childIterator].getPID()){//if this current process is the parent, terminate its child
+          Processes.erase(Processes.begin() + childIterator);
         }
-        ++j;
+        ++childIterator;
       }
-      Processes.erase(Processes.begin() + i);//terminate current process
-      addToReadyQueue(Processes[i]);
+      Processes.erase(Processes.begin() + parentIterator);//terminate current process
+      addToReadyQueue(Processes[parentIterator]);
       break;
       }
-    ++i;
+    ++parentIterator;
   }
 }
 
-void CPUManager::findChild(){
-  int i = 0; //init parser for processes vector
-  for(auto it = Children.begin(); it != Children.end(); ++it){
-      if((currProcess.getPID() == it->first.getPID()) && it->second == Processes[i].getPID()){//if matching child and parent, termiante it and add the parent to ready queue
-        Processes.erase(Processes.begin() + i);
-        addToReadyQueue(Processes[i]);
+void CPUManager::findParentAndTerminate(){
+  int parentIterator = 0; //init parser for processes vector
+  for(int i = 0; i < Children.size(); ++i){
+      if((currProcess.getPID() == Children[i].getPID()) && Children[i].getParentPID() == Processes[parentIterator].getPID()){//if matching child and parent, termiante it and add the parent to ready queue
+        Processes.erase(Processes.begin() + parentIterator);
+        addToReadyQueue(Processes[parentIterator]);
         break;
       }
   }
