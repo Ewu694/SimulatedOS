@@ -68,18 +68,19 @@ void CPUManager::createProcess(){
 }
 
 void CPUManager::forkProcess(){
-  Process child;   
-  child.setPID(processCount);
-  child.setState(1);
-  addToReadyQueue(child);
-  for(int i = 0; i < Processes.size(); ++i){
-    if(Processes[i].getPID() == getCurrentProcess()){
-      Processes[i].setType(PARENT);
-      child.setType(CHILD);
-      child.setParent(getCurrentProcess());
+  if(getCurrentProcess() != 0){
+    Process child;   
+    child.setPID(processCount);
+    for(int i = 0; i < Processes.size(); ++i){
+      if(Processes[i].getPID() == getCurrentProcess()){
+        Processes[i].setType(PARENT);
+        child.setType(CHILD);
+        child.setParent(getCurrentProcess());
+      }
     }
+    Processes.push_back(child);
+    processCount++;
   }
-  processCount++;
 }
 
 bool CPUManager::isChild(Process process){

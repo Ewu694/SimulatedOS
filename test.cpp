@@ -1,3 +1,11 @@
+#include "CPUManager.cpp"
+#include "CPUManager.h"
+#include "DiskManager.cpp"
+#include "DiskManager.h"
+#include "MemoryManager.cpp"
+#include "MemoryManager.h"
+#include "Process.cpp"
+#include "Process.h"
 #include "SimOS.h"
 
 int main()

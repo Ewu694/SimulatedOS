@@ -32,7 +32,6 @@ class SimOS{
     int num_disks;
     unsigned long long total_RAM;
     unsigned int page_size;
-    std::vector<Process> processes;
     CPUManager CPU;
     std::vector<DiskManager> disks;
     MemoryManager RAM;
