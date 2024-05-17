@@ -1,18 +1,23 @@
-#include <Process.hpp>
+#include "Process.h"
 
-int Process::getPID(){
+Process::Process() = default;
+
+int Process::getPID() const{
   return PID;
+}
+
+int Process::getState(){
+  return pState;
 }
 
 void Process::setPID(int newPID){
   PID = newPID;
 }
 
-STATE Process::getState(){
-  return pState;
-}
-
-void Process::setState(STATE currentState){
+void Process::setState(int currentState){
   pState = currentState;
 }
 
+void Process::setType(TYPE processType){
+  pType = processType;
+}

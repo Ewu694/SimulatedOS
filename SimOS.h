@@ -1,25 +1,19 @@
-#ifndef SIMOS_HPP
-#define SIMOS_HPP
+#ifndef SIMOS_H
+#define SIMOS_H
 
 #include <iostream>
 #include <deque>
 #include <vector>
 #include <unordered_map>
-#include <CPUManager.hpp>
-#include <DiskManager.hpp>
-#include <MemoryManager.hpp>
-#include <Process.hpp>
-
-struct MemoryItem{};
-struct FileReadRequest{};
-
-using MemoryUsage = std::vector<MemoryItem>;
+#include "CPUManager.h"
+#include "DiskManager.h"
+#include "MemoryManager.h"
+#include "Process.h"
  
-constexpr int NO_PROCESS{ 0 };
-
 class SimOS{
   public: 
-    SimOS(int numberOfDisks, unsigned long long amountOfRAM, unsigned int pageSize);
+    SimOS();
+    SimOS(int numberOfDisks, unsigned long long ramSize, unsigned int pageSize);
     void NewProcess(); // Creates a new process in the simulated system. The new process takes place in the ready-queue or immediately starts using the CPU. Every process in the simulated system has a PID. Your simulation assigns PIDs to new processes starting from 1 and increments it by one for each new process. Do not reuse PIDs of the terminated processes.
     void SimFork(); //The currently running process forks a child. The child is placed in the end of the ready-queue.
     void SimExit(); //The process that is currently using the CPU terminates. Make sure you release the memory used by this process immediately. If its parent is already waiting, the process terminates immediately and the parent becomes runnable (goes to the ready-queue). If its parent hasn't called wait yet, the process turns into zombie. To avoid the appearance of the orphans, the system implements the cascading termination. Cascading termination means that if a process terminates, all its descendants terminate with it.
@@ -31,20 +25,17 @@ class SimOS{
     int GetCPU(); //GetCPU returns the PID of the process currently using the CPU. If CPU is idle it returns NO_PROCESS 
     std::deque<int> GetReadyQueue(); //GetReadyQueue returns the std::deque with PIDs of processes in the ready-queue where element in front corresponds start of the ready-queue.
     MemoryUsage GetMemory(); //GetMemory returns MemoryUsage vector describing all currently used frames of RAM. Remember, Terminated “zombie” processes don’t use memory, so they don’t contribute to memory usage. MemoryItems appear in the MemoryUsage vector in the order they appear in memory (from low addresses to high).
-    FileReadRequest GetDisk(int diskNumber); //GetDisk returns an object with PID of the process served by specified disk and the name of the file read for that process. If the disk is idle, GetDisk returns the default FileReadRequest object (with PID 0 and empty string in fileName)
-    std::deque<FileReadRequest> GetDiskQueue(int diskNumber); //GetDiskQueue returns the I/O-queue of the specified disk starting from the “next to be served” process.
+    //FileReadRequest GetDisk(int diskNumber); //GetDisk returns an object with PID of the process served by specified disk and the name of the file read for that process. If the disk is idle, GetDisk returns the default FileReadRequest object (with PID 0 and empty string in fileName)
+    //std::deque<FileReadRequest> GetDiskQueue(int diskNumber); //GetDiskQueue returns the I/O-queue of the specified disk starting from the “next to be served” process.
   
   private:
-    int processCount = 1;
     int num_disks;
     unsigned long long total_RAM;
     unsigned int page_size;
+    std::vector<Process> processes;
     CPUManager CPU;
-    DiskManager disks;
+    std::vector<DiskManager> disks;
     MemoryManager RAM;
-    std::vector<Process> Parents;
-    std::unordered_map<Process, Process> Children;
-    MemoryUsage memory;
 };
 
 #endif

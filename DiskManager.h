@@ -1,5 +1,5 @@
-#ifndef DISKMANAGER_HPP
-#define DISKMANAGER_HPP
+#ifndef DISKMANAGER_H
+#define DISKMANAGER_H
 
 #include <iostream>
 

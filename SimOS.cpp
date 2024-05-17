@@ -1,15 +1,6 @@
-#include <SimOS.h>
+#include "SimOS.h"
 
-struct FileReadRequest{
-    int PID{0};
-    std::string fileName{""};
-};
- 
-struct MemoryItem{
-    unsigned long long pageNumber;
-    unsigned long long frameNumber;
-    int PID; // PID of the process using this frame of memory
-};
+SimOS::SimOS() = default;
 
 SimOS::SimOS(int numberOfDisks, unsigned long long amountOfRAM, unsigned int pageSize){
   num_disks = numberOfDisks;
@@ -18,49 +9,26 @@ SimOS::SimOS(int numberOfDisks, unsigned long long amountOfRAM, unsigned int pag
 }
 
 void SimOS::NewProcess(){
-  Process newProcess;
-  newProcess.setPID(processCount);
-  if(CPU.getCurrentProcess() == 0){
-    newProcess.setState(RUNNING);
-  }
-  else if(CPU.getCurrentProcess() != 0){
-    newProcess.setState(WAITING);
-  }
-  CPU.addToReadyQueue(newProcess.getPID());
-  Parents.push_back(newProcess);
-  processCount++;
+  CPU.createProcess();
 }
 
 void SimOS::SimFork(){
-  Process child;  
-  child.setPID(processCount);
-  if(CPU.getCurrentProcess() == 0){
-    child.setState(RUNNING);
-  }
-  else if(CPU.getCurrentProcess() != 0){
-    child.setState(WAITING);
-  }
-  CPU.addToReadyQueue(child.getPID());
-  for(int i = 0; i < Parents.size(); i++){
-    if(Parents[i].getPID() == CPU.getCurrentProcess()){
-      Children.insert({child, Parents[i]});
-    }
-  }
-  processCount++;
+  CPU.forkProcess();
 }
 
 void SimOS::SimExit(){
-  Process terminatingProcess;
-
+  RAM.findAndClearMemoryUsedByAProcess(CPU.getCurrentProcess());  
+  CPU.exitProcess();
 }
 
 void SimOS::SimWait(){
-
+  /*if(it->second.getPID() == currProcess.getPID() && Processes[i].getPID() == it->first.getPID()){ //checks if the current process is the parent and loops through processes to terminate its children
+        Processes.erase(Processes.begin() + i);
+    }*/
 }
 
 void SimOS::TimerInterrupt(){
-    CPU.addToReadyQueue(CPU.getReadyQueue().front());
-    CPU.getReadyQueue().pop_front();
+  CPU.interrupt();
 }
 
 void SimOS::DiskReadRequest(int diskNumber, std::string fileName){
@@ -68,11 +36,12 @@ void SimOS::DiskReadRequest(int diskNumber, std::string fileName){
 }
 
 void SimOS::DiskJobCompleted(int diskNumber){
-  
+
 }
 
 void SimOS::AccessMemoryAddress(unsigned long long address){
-
+  if(CPU.getCurrentProcess() == 0)
+    RAM.accessMemoryAtAddress(CPU.getCurrentProcess(), address);
 }
 
 int SimOS::GetCPU(){
@@ -84,13 +53,9 @@ std::deque<int> SimOS::GetReadyQueue(){
 }
 
 MemoryUsage SimOS::GetMemory(){
-  return memory;
+  return RAM.getMemoryUsage();
 }
 
-FileReadRequest SimOS::GetDisk(int diskNumber){
+//FileReadRequest SimOS::GetDisk(int diskNumber){}
 
-}
-
-std::deque<FileReadRequest> SimOS::GetDiskQueue(int diskNumber){
-
-}
+//std::deque<FileReadRequest> SimOS::GetDiskQueue(int diskNumber){}
