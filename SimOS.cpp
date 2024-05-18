@@ -17,7 +17,7 @@ void SimOS::SimFork(){
 }
 
 void SimOS::SimExit(){
-  RAM.clearMemory(CPU.getCurrentProcess());  
+  RAM.clearMemory(CPU.getCPUProcess());  
   CPU.exitProcess();
 }
 
@@ -40,12 +40,12 @@ void SimOS::DiskJobCompleted(int diskNumber){
 }
 
 void SimOS::AccessMemoryAddress(unsigned long long address){
-  if(CPU.getCurrentProcess() == 0)
-    RAM.accessAddress(CPU.getCurrentProcess(), address);
+  if(CPU.getCPUProcess() == 0)
+    RAM.accessAddress(CPU.getCPUProcess(), address);
 }
 
 int SimOS::GetCPU(){
-  return CPU.getCurrentProcess();
+  return CPU.getCPUProcess();
 }
 
 std::deque<int> SimOS::GetReadyQueue(){
