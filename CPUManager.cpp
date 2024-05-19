@@ -1,67 +1,74 @@
+//Eric Wu
 #include "CPUManager.h"
 
 CPUManager::CPUManager(){
-  CPU = 0;
-  processCount = 1;
+  CPU_ = 0;
+  processCount_ = 1;
 }
 
 CPUManager::CPUManager(int CPU){
-  ready_queue.push_front(CPU);
+  readyQueue_.push_front(CPU);
 }
 
 std::deque<int> CPUManager::getReadyQueue(){
-  return ready_queue;
+  return readyQueue_;
 }
 
-void CPUManager::addToReadyQueue(Process &newProcess){//if the CPU is empty, set it to the running process, else add it to the ready queue
-  if(ready_queue.empty()){
-    newProcess.setState(2);
-    setCurrentProcess(newProcess);
+void CPUManager::addToReadyQueue(int PID){//if the CPU is empty, set it to the running process, else add it to the ready queue
+  if(readyQueue_.empty()){
+    for(int i = 0; i < processes_.size(); ++i){
+      if(processes_[i].getPID() == PID){
+        processes_[i].setState(RUNNING);
+        setCurrentProcess(processes_[i]);
+      }
+    }
   }
   else{
-    ready_queue.push_back(newProcess.getPID());
-    newProcess.setState(1);
+    for(int i = 0; i < processes_.size(); ++i){
+      if(processes_[i].getPID() == PID){
+        processes_[i].setState(READY);
+        readyQueue_.push_back(PID);
+      }
+    }
   }
 }
 
 void CPUManager::runFirstProcess(){
-  if(!ready_queue.empty()){
-    for(int i = 0; i < Processes.size(); ++i){
-      if(Processes[i].getPID() == ready_queue.front()){
-        Processes[i].setState(2);
-        setCurrentProcess(Processes[i]);
+  if(!readyQueue_.empty()){
+    for(int i = 0; i < processes_.size(); ++i){
+      if(processes_[i].getPID() == readyQueue_.front()){
+        processes_[i].setState(RUNNING);
+        setCurrentProcess(processes_[i]);
         break;
       }
     }
-    ready_queue.pop_front();
+    readyQueue_.pop_front();
   }
 }
 
 int CPUManager::getCPUProcess(){
-  return CPU;
+  if(CPU_ == 0){
+    return NO_PROCESS;
+  }
+  return CPU_;
 }
 
 Process CPUManager::getCurrentProcess(){ //returns PID of current process
-  return currProcess;
+  return currProcess_;
 }
 
 void CPUManager::setCurrentProcess(Process process){
-  currProcess = process;
-  CPU = process.getPID();
+  currProcess_ = process;
+  CPU_ = process.getPID();
 }
 
 void CPUManager::exitProcess(){//sets the process in the front of the ready queue to running and pops it from the top of ready queue
-  if(currProcess.getType() == PARENT){
-    findParentAndTerminate();
-  }
-  if(currProcess.getType() == CHILD){
-     findChildAndTerminate();
-  }
+  cascadingTerminationExit();
 }
 
 
 bool CPUManager::isReadyQueueEmpty(){
-  if(ready_queue.empty())
+  if(readyQueue_.empty())
     return true;
   else
     return false;
@@ -70,168 +77,172 @@ bool CPUManager::isReadyQueueEmpty(){
 void CPUManager::createProcess(){
   Process newProcess;
   newProcess.setType(REGULAR);
-  newProcess.setPID(processCount);
-  if(CPU == 0){
-    newProcess.setState(2);
-  }
-  else if(CPU != 0){
-    newProcess.setState(1);
-  }
-  addToReadyQueue(newProcess);
-  Processes.push_back(newProcess);
-  processCount++;
+  newProcess.setPID(processCount_);
+  processes_.push_back(newProcess);
+  addToReadyQueue(newProcess.getPID());
+  processCount_++;
 }
 
 void CPUManager::forkProcess(){
-  if(CPU != 0){
+  if(CPU_ != 0){
     Process child;   
-    child.setPID(processCount);
-    for(int i = 0; i < Processes.size(); ++i){
-      if(Processes[i].getPID() == CPU){
-        Processes[i].setType(PARENT);
+    child.setPID(processCount_);
+    for(int i = 0; i < processes_.size(); ++i){
+      if(processes_[i].getPID() == CPU_){
+        processes_[i].setType(PARENT);
+        processes_[i].addChild(child.getPID());
         child.setType(CHILD);
-        child.setParent(CPU);
+        child.setParent(CPU_);
       }
     }
-    Processes.push_back(child);
-    ready_queue.push_back(child.getPID());
-    processCount++;
+    processes_.push_back(child);
+    readyQueue_.push_back(child.getPID());
+    processCount_++;
   }
   else
     throw std::logic_error("This instruction requires a running process");
 }
 
-bool CPUManager::isParent(Process process){
-  for(int i = 0; i < Children.size(); ++i){
-    if(Children[i].getParentPID() == process.getPID()){
-      return true;
-    }
-  }
-  return false;
-}
+void CPUManager::cascadingTerminationExit(){//loops through children, if the param process is found to be a child, recursively call function to see if it has any children, when it reaches a process with no children, it will return it
+  if(currProcess_.getParentPID() != 0){
+    int parentIndex = 0;
+    for(int it = 0; it < processes_.size(); ++it){
+      if(processes_[it].getPID() == currProcess_.getParentPID() && processes_[it].getState() != 3){//if the parent process of this process is not waiting for it to terminate then terminate its children and make it a zombie (now in the future zombie processes can just be terminated without worrying about if it has children)
+        int childIterator = 0;
+        while(!currProcess_.getChildren().empty() && childIterator < currProcess_.getChildren().size()){//while this process has children 
+          for(int i = 0; i < processes_.size(); ++i){//loop through all the processes
+            if(currProcess_.getChildren()[childIterator] == processes_[i].getPID()){//if this process is the child of the param process 
+              if(!processes_[i].getChildren().empty()){//check if it also has children
+                int childsChildIterator = 0;
+                while(childsChildIterator < processes_[i].getChildren().size()){//if it does, loop through processes to find its children and add it into the param   processes's children to be deleted 
+                  for(int j = 0; j < processes_.size(); ++j){
+                    currProcess_.addChild(processes_[j].getPID());
+                  }
+                }
+                processes_[i].getChildren().erase(processes_[i].getChildren().begin() + i);//delete the child of the param process after all its children are added
+              }
+              currProcess_.removeChild(childIterator);//remove child of param process 
+            }
+          }
+        }
+        currProcess_.setType(ZOMBIE);
+        currProcess_.setState(TERMINATED);
+        zombies_.push_back(currProcess_);
 
-void CPUManager::cascadingTerminationExit(Process &process){//loops through children, if the param process is found to be a child, recursively call function to see if it has any children, when it reaches a process with no children, it will return it
-  int processLocation = 0;
-  bool isChildProcess = false;
-  for(int child = 0; child < Children.size(); ++child){
-    if(process.getPID() == Children[child].getPID()){ 
-      isChildProcess = true;
-    }
-  }
-  if(isChildProcess){
-    for(int it = 0; it < Processes.size(); ++it){
-      if(Processes[it].getPID() == process.getParentPID() && Processes[it].getState() != 3){//if the parent process of this process is not waiting for it to terminate then:
-        for(int i = 0; i < Children.size(); ++i){
-          for(int parentIterator = 0; parentIterator < Processes.size(); ++parentIterator){
-            if(Processes[parentIterator].getParentPID() == process.getPID() && (Processes[parentIterator].getType() == PARENT))//if a child of one of the processes is also a parent then, recursively find a child and work up from there to delete it, after that it is done, we will delete the parent too
-              cascadingTerminationExit(Processes[parentIterator]);
-            else if(Processes[parentIterator].getType() == CHILD){
-              for(int j = 0; j < Children.size(); ++j){
-                if(Processes[parentIterator].getPID() == Children[j].getPID())
-                  Children.erase(Children.begin() + j);
-              }
-              Processes.erase(Processes.begin() + parentIterator);
-            }
-          }
-          if(Children[i].getPID() == process.getPID())
-            Children.erase(Children.begin() + i);//delete process from children vector as it is now a zombie
-        }
-        process.setType(ZOMBIE);
-        Zombies.push_back(process);
+        runFirstProcess();
+        break;//break after deleting the zombie child's children
       }
-      else if(Processes[it].getPID() == process.getParentPID() && Processes[it].getState() == 3){
-        for(int i = 0; i < Children.size(); ++i){
-          for(int parentIterator = 0; parentIterator < Processes.size(); ++parentIterator){
-            if(Processes[parentIterator].getPID() == process.getPID())//indexes where the param process is to delete later
-              processLocation = parentIterator;
-            if(Processes[parentIterator].getParentPID() == process.getPID() && (Processes[parentIterator].getType() == PARENT))//if a child of one of the processes is also a parent then, recursively find a child and work up from there to delete it, after that it is done, we will delete the parent too
-              cascadingTerminationExit(Processes[parentIterator]);
-            else if(Processes[parentIterator].getType() == CHILD){
-              for(int j = 0; j < Children.size(); ++j){
-                if(Processes[parentIterator].getPID() == Children[j].getPID())
-                  Children.erase(Children.begin() + j);
+      else if(processes_[it].getPID() == currProcess_.getParentPID() && processes_[it].getState() == 3){//else if the parent is waiting 
+        parentIndex = it;
+        int childIterator = 0;
+        int processIndex = 0;
+        while(!currProcess_.getChildren().empty() && childIterator < currProcess_.getChildren().size()){//while this process has children 
+          for(int i = 0; i < processes_.size(); ++i){//loop through all the processes
+            if(currProcess_.getPID() == processes_[i].getPID())
+              processIndex = i;
+            if(currProcess_.getChildren()[childIterator] == processes_[i].getPID()){//if this process is the child of the param process 
+              if(!processes_[i].getChildren().empty()){//check if it also has children
+                int childsChildIterator = 0;
+                while(childsChildIterator < processes_[i].getChildren().size()){//if it does, loop through processes to find its children and add it into the param processes's children to be deleted 
+                  for(int j = 0; j < processes_.size(); ++j){
+                    currProcess_.addChild(processes_[j].getPID());
+                  }
+                }
+                processes_[i].getChildren().erase(processes_[i].getChildren().begin() + i);//delete the child of the param process after all its children are added
               }
-              Processes.erase(Processes.begin() + parentIterator);
+              currProcess_.removeChild(childIterator);//remove it from the vector of children
             }
           }
-          if(Children[i].getPID() == process.getPID())
-            Children.erase(Children.begin() + i);//delete process from children vector because it is now terminated
         }
-        Processes.erase(Processes.begin() + processLocation);//delete parent from process vector because it is now terminated
+        processes_.erase(processes_.begin() + processIndex);//delete the current process to exit from it
+        runFirstProcess();
+        addToReadyQueue(processes_[it].getPID());//pushes parent to the back of ready queue or CPU
+        break;//break after deleting all the children of the curr process and adding parent to ready queue
       }
     }
   }
   else{//if just a parent process and not a child to any process then:
-    for(int parentIterator = 0; parentIterator < Processes.size(); ++parentIterator){
-      if(Processes[parentIterator].getPID() == process.getPID())//indexes where the param process is to delete later
-        processLocation = parentIterator;
-      if(Processes[parentIterator].getParentPID() == process.getPID() && (Processes[parentIterator].getType() == PARENT))//if a child of one of the processes is also a parent then, recursively find a child and work up from there to delete it, after that it is done, we will delete the parent too
-        cascadingTerminationExit(Processes[parentIterator]);
-      else if(Processes[parentIterator].getType() == CHILD){
-        for(int j = 0; j < Children.size(); ++j){
-          if(Processes[parentIterator].getPID() == Children[j].getPID())
-            Children.erase(Children.begin() + j);
+    int childIterator = 0;
+    int processIndex = 0;
+    while(!currProcess_.getChildren().empty() && childIterator < currProcess_.getChildren().size()){//while this process has children 
+      for(int i = 0; i < processes_.size(); ++i){//loop through all the processes
+        if(currProcess_.getPID() == processes_[i].getPID())
+          processIndex = i;
+        if(currProcess_.getChildren()[childIterator] == processes_[i].getPID()){//if this process is the child of the param process 
+          if(!processes_[i].getChildren().empty()){//check if it also has children
+            int childsChildIterator = 0;
+            while(childsChildIterator < processes_[i].getChildren().size()){//if it does, loop through processes to find its children and add it into the param processes's children to be deleted 
+                  for(int j = 0; j < processes_.size(); ++j){
+                    currProcess_.addChild(processes_[j].getPID());
+                  }
+                }
+                processes_[i].getChildren().erase(processes_[i].getChildren().begin() + i);//delete the child of the param process after all its children are added
+              }
+              currProcess_.removeChild(childIterator);//remove it from the vector of children
+            }
+          }
         }
-        Processes.erase(Processes.begin() + parentIterator);
-      }
-    }
-    Processes.erase(Processes.begin() + processLocation);//delete parent from process vector
+        processes_.erase(processes_.begin() + processIndex);//delete the current process to exit from it
+        runFirstProcess();
   }
-}
+ }
 
-void CPUManager::cascadingTerminationWait(Process &process){//does the same cascading termination only for a single child and after doing that, set the running to waiting
-  bool isZombie = false;
-  int processLocation = 0;
-  for(int it = 0; it < Zombies.size(); ++it){
-    if(Zombies[it].getParentPID() == process.getPID()){
-      for(int i = 0; i < Children.size(); ++i){
-        if(Zombies[it].getPID() == Children[i].getPID()){
-          Children.erase(Children.begin() + i);
-        }
-      }
-      Zombies.erase(Zombies.begin() + it);
-      addToReadyQueue(process);
+void CPUManager::cascadingTerminationWait(){//does the same cascading termination only for a single child and after doing that, set the running to waiting
+  int zombieLocation = 0;
+  for(int it = 0; it < zombies_.size(); ++it){
+    if(zombies_[it].getParentPID() == currProcess_.getPID()){
+      zombieLocation = it;
       break;
     }
-    else{
-      process.setState(4);
+  }
+  if(zombies_.size() == 0 && currProcess_.getChildren().empty()){//if there are no children or zombie for current process leave process as running
+    return;
+  }
+  if(zombies_.size() == 1){//if there is just one zombie child, CPU will just continue running
+    for(int i = 0; i < currProcess_.getChildren().size(); ++i){//loop through the children to find it 
+      if(zombies_[zombieLocation].getPID() == currProcess_.getChildren()[i]){//once found, delete the zombie child from parent
+        currProcess_.removeChild(i);
+        break;
+      }
     }
-  }
-}
-
-void CPUManager::findParentAndTerminate(){
-  cascadingTerminationExit(currProcess);
-  runFirstProcess();
-  }
-
-void CPUManager::findChildAndTerminate(){
-  for(int i = 0; i < Children.size(); ++i){
-    if(Children[i].getPID() == currProcess.getPID()){
-      Children.erase(Children.begin() + i);
+    for(int i = 0; i < processes_.size(); ++i){//remove zombie from processes
+      if(processes_[i].getPID() == zombies_[zombieLocation].getPID()){
+        processes_.erase(processes_.begin() + i);
+        break;
+      }
     }
+    zombies_.erase(zombies_.begin() + zombieLocation);//erase it from zombie process as well now and let process continue
   }
-  for(int it = 0; it < Processes.size(); ++it){
-      if(Processes[it].getPID() == currProcess.getParentPID() && Processes[it].getState() != 3){//if the parent process of this process is not waiting for it to terminaet then:
-        currProcess.setType(ZOMBIE);
+  else if(zombies_.size() > 1){///else if there is more than one zombie child
+    for(int i = 0; i < currProcess_.getChildren().size(); ++i){//loop through the children to find it 
+      if(zombies_[zombieLocation].getPID() == currProcess_.getChildren()[i]){//once found, delete the zombie child from parent
+        currProcess_.removeChild(i);
+        break;
       }
-      else if(Processes[it].getPID() == CPU && Processes[it].getState() == 3){
-        Processes[it].setState(4);
-        Processes.erase(Processes.begin() + it);
+    }
+    for(int i = 0; i < processes_.size(); ++i){//remove zombie from processes
+      if(processes_[i].getPID() == zombies_[zombieLocation].getPID()){
+        processes_.erase(processes_.begin() + i);
+        break;
       }
-      if(Processes[it].getPID() == ready_queue.front()){
-        setCurrentProcess(Processes[it]);
-        ready_queue.pop_front();
-      }
+    }
+    zombies_.erase(zombies_.begin() + zombieLocation);//erase it from zombie process as well now
+    currProcess_.setState(WAITING);
+    runFirstProcess();
+  } 
+  else if(zombies_.empty() && !currProcess_.getChildren().empty()){//if there are children and no zombies then set currProcess to ready in back of ready queue
+    currProcess_.setState(WAITING);
+    runFirstProcess();
   }
 }
 
 void CPUManager::interrupt(){
-  if(!ready_queue.empty()){//if ready queue is not empty
+  if(!readyQueue_.empty()){//if ready queue is not empty
   //first loop through all processes to pause the current process if the stack is not empty
-  for(int i = 0; i < Processes.size(); ++i){
-      if(Processes[i].getPID() == CPU){//if the current process has matching PID to the current Process
-        Processes[i].setState(1);//pause it by settings its state to ready
-        ready_queue.push_back(Processes[i].getPID());//add it to the back of the ready queue
+  for(int i = 0; i < processes_.size(); ++i){
+      if(processes_[i].getPID() == CPU_){//if the current process has matching PID to the current Process
+        processes_[i].setState(READY);//pause it by settings its state to ready
+        readyQueue_.push_back(processes_[i].getPID());//add it to the back of the ready queue
         break;
       }
   }
@@ -241,24 +252,11 @@ void CPUManager::interrupt(){
 }
 
 void CPUManager::wait(){
-  if(CPU != 0){ //if CPU is running
-    int currCPU = CPU;
-    Process currentProcess = currProcess;
-    if(isParent(currProcess)){ //if the current process is a parent 
-      cascadingTerminationWait(currProcess);
-      if(!ready_queue.empty()){
-        for(int i = 0; i < Processes.size(); ++i){
-          if(Processes[i].getPID() == ready_queue.front()){
-            setCurrentProcess(Processes[i]);
-            ready_queue.pop_front();
-            addToReadyQueue(currProcess);
-            break;
-          }
-        }
-      }
-    }
+  if(CPU_ != 0){ //if CPU is running
+    cascadingTerminationWait();
   }
 }
 
-
-
+void CPUManager::setCPUState(int STATE){
+  CPU_ = STATE;
+}

@@ -1,15 +1,16 @@
+//Eric Wu
 #include "SimOS.h"
 
-SimOS::SimOS() = default;
-
 SimOS::SimOS(int numberOfDisks, unsigned long long amountOfRAM, unsigned int pageSize){
-  num_disks = numberOfDisks;
-  total_RAM = amountOfRAM;
-  page_size = pageSize;
+  RAM.setRAMSize(amountOfRAM);
+  RAM.setPageSize(pageSize);
+  RAM.setNumPages(amountOfRAM, pageSize);
+  disks.setNumDisks(numberOfDisks);
 }
 
 void SimOS::NewProcess(){
   CPU.createProcess();
+
 }
 
 void SimOS::SimFork(){
@@ -30,25 +31,18 @@ void SimOS::TimerInterrupt(){
 }
 
 void SimOS::DiskReadRequest(int diskNumber, std::string fileName){
-  if(diskNumber < disks.size() && diskNumber > 0){
-    FileReadRequest newRequest{CPU.getCPUProcess(), fileName};
-    std::pair<FileReadRequest, Process> job{newRequest, CPU.getCurrentProcess()};
-    disks[diskNumber].addToQueue(job);
-    CPU.runFirstProcess();
-  }
+  disks.diskReadRequest(CPU.getCPUProcess(), diskNumber, fileName);
+  CPU.setCPUState(0);
 }
 
 void SimOS::DiskJobCompleted(int diskNumber){
-  if(diskNumber < disks.size()){
-    Process process = disks[diskNumber].getCurrentProcess();
-    CPU.addToReadyQueue(process);
-    disks[diskNumber].clearCurrentJob();
-  }
+  int completedRequest = disks.completeDiskJob(diskNumber);//holds PID of completed request
+  if(completedRequest != 0)
+    CPU.addToReadyQueue(completedRequest);
 }
 
 void SimOS::AccessMemoryAddress(unsigned long long address){
-  if(CPU.getCPUProcess() == 0)
-    RAM.accessAddress(CPU.getCPUProcess(), address);
+  RAM.accessAddress(CPU.getCPUProcess(), address);
 }
 
 int SimOS::GetCPU(){
@@ -64,15 +58,9 @@ MemoryUsage SimOS::GetMemory(){
 }
 
 FileReadRequest SimOS::GetDisk(int diskNumber){
-  if(diskNumber < disks.size())
-    return disks[diskNumber].getCurrentRR();
-  else
-    throw std::out_of_range("The disk with the requested number does not exist");
+  return disks.getDisk(diskNumber);
 }
 
 std::deque<FileReadRequest> SimOS::GetDiskQueue(int diskNumber){
-  if(diskNumber < disks.size())
-    return disks[diskNumber].getWaitingRR();
-  else 
-    throw std::out_of_range("The disk with the requested number does not exist");
+  return disks.getDiskQueue(diskNumber);
 }

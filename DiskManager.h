@@ -1,8 +1,10 @@
+//Eric Wu
 #ifndef DISKMANAGER_H
 #define DISKMANAGER_H
 
 #include "Process.h"
 #include <iostream>
+#include <vector>
 #include <deque>
 
 struct FileReadRequest{
@@ -12,21 +14,18 @@ struct FileReadRequest{
 
 class DiskManager{
 public:
-    DiskManager(); //default param
-    FileReadRequest getCurrentRR(); //returns the curent file read request of the current job 
-    Process getCurrentProcess() const; //returns current process in disk manager
-    std::pair<FileReadRequest, Process> getCurrentJob() const; //returns current job 
-    std::deque<FileReadRequest> getWaitingRR(); //returns a deque of waiting read requests
-    std::deque<std::pair<FileReadRequest,Process>> getDiskQueue() const; //returns the disk queue
-    void setDiskQueue(const std::deque<std::pair<FileReadRequest,Process>>& diskQ); //sets disk queue to a given disk queue
-    void setCurrentProcess(const Process& process); //sets current process of current job to that of a given one
-    void setCurrentJob(const std::pair<FileReadRequest,Process>& job); //sets current job of current job to that of a given one
-    void setCurrentRR(const FileReadRequest& fileReadRequest); //sets current ready request to that of a given one
-    void completeWait(); //if diskqueue isnt empty, complete the read request in IO queue, if empty, clear the current job
-    void addToQueue(const std::pair<FileReadRequest, Process>& job); //job is either handled immediately or is sent to the IO queue depending on whether or not theres already a job being handled
-    void clearCurrentJob(); //clears current request
+    FileReadRequest& operator=(const FileReadRequest rhs);
+    int getNumDisks();//returns number of disks
+    std::vector<FileReadRequest> getAllCurrentRequests();//returns a vector of all the requests
+    FileReadRequest getDisk(int disk);//returns all the disks in ioqueue
+    std::deque<FileReadRequest> getDiskQueue(int disk);
+    void setNumDisks(int numDisks);//sets up ioqueue and all requests
+    void diskReadRequest(int processID, int numDisk, std::string file);
+    int completeDiskJob(int diskNum); //returns the PID of the process that is done reading
+
 private:
-    std::pair<FileReadRequest, Process> currJob;
-    std::deque<std::pair <FileReadRequest, Process>> diskQueue;
+    int numDisks_;
+    std::vector<FileReadRequest> currRequests_;
+    std::vector<std::deque<FileReadRequest>> IOQueue_;
 };
 #endif

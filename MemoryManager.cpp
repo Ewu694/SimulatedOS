@@ -1,30 +1,8 @@
+//Eric Wu
 #include "MemoryManager.h"
 
-MemoryManager::MemoryManager(){
-    ramSize = 0;
-    pageSize = 0;
-    numPages = 0;
-}
-
-MemoryManager::MemoryManager(const unsigned long long &ram, const unsigned int &pageS) {
-    ramSize = ram;
-    pageSize = pageS;
-    numPages = ramSize / pageS;
-    for(unsigned int i = 0; i < numPages; i++) {
-        usedFrames.push_back(i);
-    }
-}
-
-void MemoryManager::setRAMSize(const unsigned long long &ram) {
-    ramSize = ram;
-}
-
-void MemoryManager::setPageSize(const unsigned int &pageS) {
-    pageSize = pageS;
-}
-
-void MemoryManager::setMemoryUsage(const MemoryUsage &memoryU) {
-    memory = memoryU;
+unsigned long long MemoryManager::getNumPages(){
+    return numPages;
 }
 
 unsigned long long MemoryManager::getRAMSize() const {
@@ -41,6 +19,25 @@ MemoryUsage MemoryManager::getMemoryUsage() const {
 
 unsigned long long MemoryManager::getPageNumber(const unsigned long long &address) {
     return address / pageSize;
+}
+
+void MemoryManager::setRAMSize(const unsigned long long &ram) {
+    ramSize = ram;
+}
+
+void MemoryManager::setPageSize(const unsigned int &pageS) {
+    pageSize = pageS;
+}
+
+void MemoryManager::setMemoryUsage(const MemoryUsage &memoryU) {
+    memory = memoryU;
+}
+
+void MemoryManager::setNumPages(const unsigned long long &amountOfRAM, const unsigned int &pageSize){
+    numPages = ramSize / pageSize;
+    for(unsigned int i = 0; i < numPages; i++) {
+        usedFrames.push_back(i);
+    }
 }
 
 void MemoryManager::accessAddress(const int &processID, const unsigned long long &address) {

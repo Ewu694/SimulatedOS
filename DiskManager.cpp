@@ -1,73 +1,51 @@
+//Eric Wu
 #include "DiskManager.h"
 
-DiskManager::DiskManager(){
-  FileReadRequest noJobFile{0, ""};
-  Process noJobProcess(0, NO_PROCESS);
-  currJob.first = noJobFile;
-  currJob.second = noJobProcess;
+int DiskManager::getNumDisks(){
+  return numDisks_;
 }
 
-FileReadRequest DiskManager::getCurrentRR(){
-  return currJob.first;
+FileReadRequest DiskManager::getDisk(int diskNumber){
+  return currRequests_[diskNumber];
 }
 
-Process DiskManager::getCurrentProcess() const{
-  return currJob.second;
+std::vector<FileReadRequest> DiskManager::getAllCurrentRequests(){
+  return currRequests_;
 }
 
-std::pair<FileReadRequest, Process> DiskManager::getCurrentJob() const{
-  return currJob;
+std::deque<FileReadRequest> DiskManager::getDiskQueue(int disk){
+  return IOQueue_[disk];
 }
 
-std::deque<FileReadRequest> DiskManager::getWaitingRR(){
-  std::deque<FileReadRequest> waitingFileReadRequests;
-  for(auto i = diskQueue.begin(); i != diskQueue.end(); i++)
-  {
-      waitingFileReadRequests.push_back(i->first);
-  }
-  return waitingFileReadRequests;
-}
-
-std::deque<std::pair<FileReadRequest,Process>> DiskManager::getDiskQueue() const{
-  return diskQueue;
-}
-
-void DiskManager::setDiskQueue(const std::deque<std::pair<FileReadRequest,Process>>& diskQ){
-  diskQueue = diskQ;
-}
+void DiskManager::setNumDisks(int totalDisks){
+  numDisks_ = totalDisks;
+  for(int i = 0; i < numDisks_; ++i){
+    std::deque<FileReadRequest> ioQueue;
+    FileReadRequest request;
+    IOQueue_.push_back(ioQueue);
     
-void DiskManager::setCurrentProcess(const Process& process){
-  currJob.second = process;
-}
-
-void DiskManager::setCurrentJob(const std::pair<FileReadRequest,Process>& job){
-  currJob = job;
-}
-    
-void DiskManager::setCurrentRR(const FileReadRequest& fileReadRequest){
-  currJob.first = fileReadRequest;
-}
-
-void DiskManager::completeWait(){
-  if(!diskQueue.empty()){
-    currJob = diskQueue.front();
-    diskQueue.pop_front();
+    currRequests_.push_back(request);
   }
-  else
-    clearCurrentJob();
 }
 
-void DiskManager::addToQueue(const std::pair<FileReadRequest, Process>& job){
-  if(currJob.second.getState() == 0)
-    currJob = job;
-  else
-    diskQueue.push_back(job);
+void DiskManager::diskReadRequest(int processID, int numDisk, std::string file){
+  FileReadRequest request;//create a default request
+  request.fileName = file;
+  request.PID = processID;
+  if(currRequests_[numDisk].PID == 0)//if there is no current process reading at the numDisk position
+    currRequests_[numDisk] = request;//then set current request to it
+  else//else push it back into the IO queue where the request is stored for this particular position
+    IOQueue_[numDisk].push_back(request);
 }
 
-void DiskManager::clearCurrentJob(){
-  currJob.first.fileName = "";
-  currJob.first.PID = 0;
-
-  currJob.second.setPID(0);
-  currJob.second.setState(0);
+int DiskManager::completeDiskJob(int diskNum){
+  int runningPID = currRequests_[diskNum].PID;
+  //temporarily pause the current request at the disk
+  currRequests_[diskNum].PID = 0;
+  currRequests_[diskNum].fileName = "";
+  if(IOQueue_[diskNum].front().PID != 0){//if there are requests in this disk
+    currRequests_[diskNum] = IOQueue_[diskNum].front();//complete request at the front of the disk by adding it into the current requests in the position of its disknum
+    IOQueue_[diskNum].pop_front();//pop request off after finishing
+  }
+  return runningPID;
 }

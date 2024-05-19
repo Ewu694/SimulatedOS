@@ -1,8 +1,8 @@
+//Eric Wu
 #ifndef CPUMANAGER_H
 #define CPUMANAGER_H
 
 #include <deque>
-#include <vector>
 #include "Process.h"
 
 class CPUManager{
@@ -13,28 +13,25 @@ class CPUManager{
     int getCPUProcess();
     Process getCurrentProcess(); //returns the process currently using the CPU
     void exitProcess(); //terminates from current process and pushes the next process in ready queue to CPU
-    void addToReadyQueue(Process &process);//if ready queue is empty send PID to CPU, else add to ready queue
+    void addToReadyQueue(int PID);//if ready queue is empty send PID to CPU, else add to ready queue
     bool isReadyQueueEmpty(); //checks if there is nothing in ready queue
     void createProcess(); //creates new process
     void forkProcess(); //forks from parent process 
-    bool isParent(Process process); //checks if a process is a child or parent
     bool hasZombie(std::vector<Process> allProcesses); //checks if zombie processes exist within a vector of processes
-    void findParentAndTerminate();//if the current process is a parent, terminate all of its children and then run top of readyq
-    void findChildAndTerminate();//if the current process is a child, terminate it from the processes vector and then run top of readyq
-    void cascadingTerminationExit(Process &process);//gets parent of current process, terminates all of its current children, itself, and adds parent to ready queue
-    void cascadingTerminationWait(Process &process);
+    void cascadingTerminationExit();//gets parent of current process, terminates all of its current children, itself, and adds parent to ready queue
+    void cascadingTerminationWait();
     void interrupt();
     void setCurrentProcess(Process PID);
     void runFirstProcess();
     void wait();
+    void setCPUState(int STATE);
   private:
-    std::deque<int> ready_queue;
-    int CPU;
-    Process currProcess;
-    int processCount = 1; //used to set PIDs and PIDs start from 1
-    std::vector<Process> Processes;
-    std::vector<Process> Children;
-    std::vector<Process> Zombies;
+    std::deque<int> readyQueue_;
+    int CPU_;
+    Process currProcess_;
+    int processCount_ = 1; //used to set PIDs and PIDs start from 1
+    std::vector<Process> processes_;
+    std::vector<Process> zombies_;
 };
 
 #endif

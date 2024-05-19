@@ -1,3 +1,4 @@
+//Eric Wu
 #ifndef SIMOS_H
 #define SIMOS_H
 
@@ -12,7 +13,6 @@
  
 class SimOS{
   public: 
-    SimOS();
     SimOS(int numberOfDisks, unsigned long long ramSize, unsigned int pageSize);
     void NewProcess(); // Creates a new process in the simulated system. The new process takes place in the ready-queue or immediately starts using the CPU. Every process in the simulated system has a PID. Your simulation assigns PIDs to new processes starting from 1 and increments it by one for each new process. Do not reuse PIDs of the terminated processes.
     void SimFork(); //The currently running process forks a child. The child is placed in the end of the ready-queue.
@@ -27,13 +27,11 @@ class SimOS{
     MemoryUsage GetMemory(); //GetMemory returns MemoryUsage vector describing all currently used frames of RAM. Remember, Terminated “zombie” processes don’t use memory, so they don’t contribute to memory usage. MemoryItems appear in the MemoryUsage vector in the order they appear in memory (from low addresses to high).
     FileReadRequest GetDisk(int diskNumber); //GetDisk returns an object with PID of the process served by specified disk and the name of the file read for that process. If the disk is idle, GetDisk returns the default FileReadRequest object (with PID 0 and empty string in fileName)
     std::deque<FileReadRequest> GetDiskQueue(int diskNumber); //GetDiskQueue returns the I/O-queue of the specified disk starting from the “next to be served” process.
-  private:
-    int num_disks;
-    unsigned long long total_RAM;
-    unsigned int page_size;
+  private:  
     CPUManager CPU;
-    std::vector<DiskManager> disks;
+    DiskManager disks;
     MemoryManager RAM;
+    std::vector<Process> allProcesses;
 };
 
 #endif

@@ -30,7 +30,7 @@ int main()
 	sim.DiskReadRequest(0, "file1.txt");
 	if (sim.GetCPU() != NO_PROCESS)
 	{
-		alg++  -std=c++17  *.cpp  -o os_testlTestsClean = false;
+		allTestsClean = false;
 		std::cout << "Test on the line 23 fails!" << std::endl;
 	}
 
@@ -61,7 +61,7 @@ int main()
 		allTestsClean = false;
 		std::cout << "Test on the line 51 fails!" << std::endl;
 	}
-
+	
 	std::deque<int> readyQueue{ sim.GetReadyQueue() };
 	if (readyQueue.size() != 0)
 	{
