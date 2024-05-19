@@ -25,9 +25,8 @@ class SimOS{
     int GetCPU(); //GetCPU returns the PID of the process currently using the CPU. If CPU is idle it returns NO_PROCESS 
     std::deque<int> GetReadyQueue(); //GetReadyQueue returns the std::deque with PIDs of processes in the ready-queue where element in front corresponds start of the ready-queue.
     MemoryUsage GetMemory(); //GetMemory returns MemoryUsage vector describing all currently used frames of RAM. Remember, Terminated “zombie” processes don’t use memory, so they don’t contribute to memory usage. MemoryItems appear in the MemoryUsage vector in the order they appear in memory (from low addresses to high).
-    //FileReadRequest GetDisk(int diskNumber); //GetDisk returns an object with PID of the process served by specified disk and the name of the file read for that process. If the disk is idle, GetDisk returns the default FileReadRequest object (with PID 0 and empty string in fileName)
-    //std::deque<FileReadRequest> GetDiskQueue(int diskNumber); //GetDiskQueue returns the I/O-queue of the specified disk starting from the “next to be served” process.
-  
+    FileReadRequest GetDisk(int diskNumber); //GetDisk returns an object with PID of the process served by specified disk and the name of the file read for that process. If the disk is idle, GetDisk returns the default FileReadRequest object (with PID 0 and empty string in fileName)
+    std::deque<FileReadRequest> GetDiskQueue(int diskNumber); //GetDiskQueue returns the I/O-queue of the specified disk starting from the “next to be served” process.
   private:
     int num_disks;
     unsigned long long total_RAM;

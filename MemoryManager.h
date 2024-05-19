@@ -18,16 +18,16 @@ class MemoryManager
 {
 public:
     MemoryManager();
-    MemoryManager(unsigned long long ramSize,unsigned int pageS);
-    void setRAMSize(unsigned long long ramSize);
-    void setMemoryUsage(MemoryUsage memory);
-    void setPageSize( unsigned int pageS);
-    unsigned long long getRAMSize();
-    MemoryUsage getMemoryUsage();
-    unsigned int getPageSize();
-    unsigned long long getPageNumber( unsigned long long address);
-    void accessAddress(int processID,  unsigned long long address);
-    void clearMemory( int processID);
+    MemoryManager(const unsigned long long &ramSize, const unsigned int &pageS);
+    void setRAMSize(const unsigned long long &ramSize);
+    void setMemoryUsage(const MemoryUsage &memory);
+    void setPageSize(const unsigned int &pageS);
+    unsigned long long getRAMSize() const;
+    MemoryUsage getMemoryUsage() const;
+    unsigned int getPageSize() const;
+    unsigned long long getPageNumber(const unsigned long long &address);
+    void accessAddress(const int &processID, const unsigned long long &address);
+    void clearMemory(const int &processID);
 
 private:
     std::deque<unsigned long long> usedFrames;

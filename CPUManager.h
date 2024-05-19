@@ -17,13 +17,16 @@ class CPUManager{
     bool isReadyQueueEmpty(); //checks if there is nothing in ready queue
     void createProcess(); //creates new process
     void forkProcess(); //forks from parent process 
-    bool isChild(Process process); //checks if a process is a child or parent
+    bool isParent(Process process); //checks if a process is a child or parent
+    bool hasZombie(std::vector<Process> allProcesses); //checks if zombie processes exist within a vector of processes
     void findParentAndTerminate();//if the current process is a parent, terminate all of its children and then run top of readyq
     void findChildAndTerminate();//if the current process is a child, terminate it from the processes vector and then run top of readyq
-    void cascadingTermination(Process &process);//gets parent of current process, terminates all of its current children and adds parent to ready queue
+    void cascadingTerminationExit(Process &process);//gets parent of current process, terminates all of its current children, itself, and adds parent to ready queue
+    void cascadingTerminationWait(Process &process);
     void interrupt();
     void setCurrentProcess(Process PID);
-
+    void runFirstProcess();
+    void wait();
   private:
     std::deque<int> ready_queue;
     int CPU;
@@ -31,6 +34,7 @@ class CPUManager{
     int processCount = 1; //used to set PIDs and PIDs start from 1
     std::vector<Process> Processes;
     std::vector<Process> Children;
+    std::vector<Process> Zombies;
 };
 
 #endif

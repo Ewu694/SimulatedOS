@@ -22,9 +22,7 @@ void SimOS::SimExit(){
 }
 
 void SimOS::SimWait(){
-  /*if(it->second.getPID() == currProcess.getPID() && Processes[i].getPID() == it->first.getPID()){ //checks if the current process is the parent and loops through processes to terminate its children
-        Processes.erase(Processes.begin() + i);
-    }*/
+  CPU.wait();
 }
 
 void SimOS::TimerInterrupt(){
@@ -32,11 +30,20 @@ void SimOS::TimerInterrupt(){
 }
 
 void SimOS::DiskReadRequest(int diskNumber, std::string fileName){
-
+  if(diskNumber < disks.size() && diskNumber > 0){
+    FileReadRequest newRequest{CPU.getCPUProcess(), fileName};
+    std::pair<FileReadRequest, Process> job{newRequest, CPU.getCurrentProcess()};
+    disks[diskNumber].addToQueue(job);
+    CPU.runFirstProcess();
+  }
 }
 
 void SimOS::DiskJobCompleted(int diskNumber){
-
+  if(diskNumber < disks.size()){
+    Process process = disks[diskNumber].getCurrentProcess();
+    CPU.addToReadyQueue(process);
+    disks[diskNumber].clearCurrentJob();
+  }
 }
 
 void SimOS::AccessMemoryAddress(unsigned long long address){
@@ -56,6 +63,16 @@ MemoryUsage SimOS::GetMemory(){
   return RAM.getMemoryUsage();
 }
 
-//FileReadRequest SimOS::GetDisk(int diskNumber){}
+FileReadRequest SimOS::GetDisk(int diskNumber){
+  if(diskNumber < disks.size())
+    return disks[diskNumber].getCurrentRR();
+  else
+    throw std::out_of_range("The disk with the requested number does not exist");
+}
 
-//std::deque<FileReadRequest> SimOS::GetDiskQueue(int diskNumber){}
+std::deque<FileReadRequest> SimOS::GetDiskQueue(int diskNumber){
+  if(diskNumber < disks.size())
+    return disks[diskNumber].getWaitingRR();
+  else 
+    throw std::out_of_range("The disk with the requested number does not exist");
+}

@@ -2,12 +2,17 @@
 
 Process::Process() = default;
 
+Process::Process(const int& processID, const int& processState){
+  PID = processID;
+  pState = processState;
+}
+
 Process& Process::operator=(const Process& process)
 {
     PID = process.PID;
     pState = process.pState;
     pType = process.pType;
-    parentPID= process.parentPID;
+    parentPID = process.parentPID;
     return *this;
 }
 int Process::getPID(){

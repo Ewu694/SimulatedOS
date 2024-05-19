@@ -14,6 +14,7 @@ enum TYPE{REGULAR, CHILD, PARENT, ZOMBIE};
 class Process{
   public:
     Process();
+    Process(const int& processID, const int& processState);
     Process& operator=(const Process& process);   
     int getPID();    
     int getState();

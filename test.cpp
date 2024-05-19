@@ -27,21 +27,21 @@ int main()
 		std::cout << "Test on the line 16 fails!" << std::endl;
 	}
 
-	/*sim.DiskReadRequest(0, "file1.txt");
+	sim.DiskReadRequest(0, "file1.txt");
 	if (sim.GetCPU() != NO_PROCESS)
 	{
 		alg++  -std=c++17  *.cpp  -o os_testlTestsClean = false;
 		std::cout << "Test on the line 23 fails!" << std::endl;
-	}*/
+	}
 
-	/*FileReadRequest request{ sim.GetDisk(0) };
+	FileReadRequest request{ sim.GetDisk(0) };
 	if (request.PID != 1 || request.fileName != "file1.txt")
 	{
 		allTestsClean = false;
 		std::cout << "Test on the line 30 fails!" << std::endl;
-	}*/
+	}
 
-	/*std::deque<FileReadRequest> ioQueue0{ sim.GetDiskQueue(0) };
+	std::deque<FileReadRequest> ioQueue0{ sim.GetDiskQueue(0) };
 	if (ioQueue0.size() != 0)
 	{
 		allTestsClean = false;
@@ -55,7 +55,6 @@ int main()
 		allTestsClean = false;
 		std::cout << "Test on the line 45 fails!" << std::endl;
 	}
-  */
 
 	if (sim.GetCPU() != 1)
 	{
@@ -93,7 +92,7 @@ int main()
 		allTestsClean = false;
 		std::cout << "Test on the line 82 fails!" << std::endl;
 	}
-/*
+
 	sim.AccessMemoryAddress(140);
 	MemoryUsage ram{ sim.GetMemory() };
 	if (ram[0].pageNumber != 14 || ram[0].PID != 1)
@@ -101,7 +100,7 @@ int main()
 		allTestsClean = false;
 		std::cout << "Test on the line 90 fails!" << std::endl;
 	}
-
+	
 	sim.SimWait();
 	if (sim.GetCPU() != 1)
 	{
@@ -120,5 +119,4 @@ int main()
 	if (allTestsClean)
 		std::cout << "These preliminary tests are passed" << std::endl;
 	return 0;
-  */
 }
