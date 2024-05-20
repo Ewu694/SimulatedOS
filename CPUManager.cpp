@@ -44,6 +44,9 @@ void CPUManager::runFirstProcess(){
     }
     readyQueue_.pop_front();
   }
+  else{
+    CPU_ = 0;
+  }
 }
 
 int CPUManager::getCPUProcess(){

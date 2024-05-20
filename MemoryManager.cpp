@@ -1,71 +1,83 @@
 //Eric Wu
 #include "MemoryManager.h"
 
-unsigned long long MemoryManager::getNumPages(){
-    return numPages;
+int MemoryManager::getProcessPID(int index){
+    return pageTable_[index].PID;
 }
 
-unsigned long long MemoryManager::getRAMSize() const {
-    return ramSize;
+void MemoryManager::setAmountOfRAM(unsigned long long amountOfRAM){
+    amountOfRAM_ = amountOfRAM;
 }
 
-unsigned int MemoryManager::getPageSize() const {
-    return pageSize;
+void MemoryManager::setPageSize(unsigned int pageSize){
+    pageSize_ = pageSize;
 }
 
-MemoryUsage MemoryManager::getMemoryUsage() const {
-    return memory;
-}
-
-unsigned long long MemoryManager::getPageNumber(const unsigned long long &address) {
-    return address / pageSize;
-}
-
-void MemoryManager::setRAMSize(const unsigned long long &ram) {
-    ramSize = ram;
-}
-
-void MemoryManager::setPageSize(const unsigned int &pageS) {
-    pageSize = pageS;
-}
-
-void MemoryManager::setMemoryUsage(const MemoryUsage &memoryU) {
-    memory = memoryU;
-}
-
-void MemoryManager::setNumPages(const unsigned long long &amountOfRAM, const unsigned int &pageSize){
-    numPages = ramSize / pageSize;
-    for(unsigned int i = 0; i < numPages; i++) {
-        usedFrames.push_back(i);
+void MemoryManager::createPageTable(){
+    int pageTableSize = amountOfRAM_ / pageSize_;//total num pages
+    for(unsigned long long i = 0; i < pageTableSize; i++){//creates page table with default values and adds them to the recentlyUsedFrames to fill up the page table
+        MemoryItem frames;
+        frames.frameNumber = i;
+        frames.PID = 0;
+        frames.pageNumber = 0;
+        pageTable_.push_back(frames);
+        recentlyUsedFrames_.push_back(INT_MAX);
     }
 }
 
-void MemoryManager::accessAddress(const int &processID, const unsigned long long &address) {
-    MemoryItem memoryAccess;
-    memoryAccess.pageNumber = address / pageSize;
-    memoryAccess.frameNumber = usedFrames.front();
-    memoryAccess.PID = processID;
-
-    usedFrames.push_back(memoryAccess.frameNumber);
-    usedFrames.pop_front();
-
-    bool frameInUse = false;
-    for(auto it = memory.begin(); it != memory.end(); ++it) {
-        if(it->frameNumber == memoryAccess.frameNumber) {
-            frameInUse = true;
-            *it = memoryAccess;
+void MemoryManager::accessMemoryAddress(int PID, unsigned long long address)
+{
+    unsigned long long pageNum = address / pageSize_;//page num of process
+    bool unusedFrame = false;//if this frame has never been used before 
+    bool sameFrame = false;//used to indicate if this frame has been already used before
+    for (int i = 0; i < pageTable_.size(); ++i){//loops through to check if this there is already a corresponding page
+        if ((getProcessPID(i) ==  PID) && (pageTable_[i].pageNumber == pageNum)){
+            sameFrame = true;//set true if there is
+            frameUseCounter_++;//increment its use 
+            recentlyUsedFrames_[i] = frameUseCounter_;//update recently used info
             break;
         }
     }
-    if(!frameInUse) 
-        memory.push_back(memoryAccess);
+    if (!sameFrame){//if it is not the same frame then:
+        for (int i = 0; i < pageTable_.size(); ++i){//loop through page table
+            if (getProcessPID(i) == 0){//if matching process, update the info at the page table
+                pageTable_[i].pageNumber = pageNum;
+                pageTable_[i].PID = PID;
+                frameUseCounter_++;//increment useCount
+                recentlyUsedFrames_[i] = frameUseCounter_;//update recently used frame to this frame
+                unusedFrame = true;//this is a new frame
+                break;
+            }
+        }
+    }
+    if (!sameFrame && !unusedFrame){//if this is not same frame and is unused 
+        int leastRecentlyUsed = INT_MAX;//temp variable using int max so the comparator later always go through
+        for (int i = 0; i < recentlyUsedFrames_.size(); ++i){//loop through the most recently used frame to find the most recently used one for us to replace
+            if (recentlyUsedFrames_[i] < leastRecentlyUsed)
+                leastRecentlyUsed = recentlyUsedFrames_[i];
+        }
+        pageTable_[leastRecentlyUsed].pageNumber = pageNum;//update our page table at this location to have the most recently used pagenumber
+        pageTable_[leastRecentlyUsed].PID = PID;//same update but for PID
+        recentlyUsedFrames_[leastRecentlyUsed] = frameUseCounter_; //update recently used info
+    }
 }
 
-void MemoryManager::clearMemory(const int &processID) {
-    for(auto it = memory.begin(); it != memory.end();) {
-        if(it->PID == processID)
-            it = memory.erase(it);
-        else 
-            ++it;
+MemoryUsage MemoryManager::getMemory()
+{
+    currentlyUsedFrames_.clear();//clears all the curent memory items in use for us to refresh
+    for (int i = 0; i < pageTable_.size(); ++i){//loops through page table, if by the end of all memory allocation, there is still a frame in the page table, add it to the list of currently used frames.
+        if (getProcessPID(i) != 0){
+            currentlyUsedFrames_.push_back(pageTable_[i]);
+        }
+    }
+    return currentlyUsedFrames_;
+}
+
+void MemoryManager::removePageTableFrame(int PID)//removes frame from table with given process
+{
+    for (int i = 0; i < pageTable_.size(); ++i){
+        if (getProcessPID(i) == PID){
+            pageTable_.erase(pageTable_.begin() + i);
+        }
     }
 }

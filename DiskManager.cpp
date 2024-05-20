@@ -1,9 +1,5 @@
 //Eric Wu
-#include "DiskManager.h"
-
-int DiskManager::getNumDisks(){
-  return numDisks_;
-}
+#include "DiskManager.h"  
 
 FileReadRequest DiskManager::getDisk(int diskNumber){
   return currRequests_[diskNumber];
@@ -43,9 +39,16 @@ int DiskManager::completeDiskJob(int diskNum){
   //temporarily pause the current request at the disk
   currRequests_[diskNum].PID = 0;
   currRequests_[diskNum].fileName = "";
-  if(IOQueue_[diskNum].front().PID != 0){//if there are requests in this disk
+  if(IOQueue_[diskNum].size() != 0){//if there are requests in this disk
     currRequests_[diskNum] = IOQueue_[diskNum].front();//complete request at the front of the disk by adding it into the current requests in the position of its disknum
     IOQueue_[diskNum].pop_front();//pop request off after finishing
   }
   return runningPID;
+}
+
+bool DiskManager::checkIfDiskExists(int diskNum){
+  if(diskNum > numDisks_ || diskNum < 0){
+    return false;
+  }
+  return true;
 }

@@ -28,10 +28,11 @@ class SimOS{
     FileReadRequest GetDisk(int diskNumber); //GetDisk returns an object with PID of the process served by specified disk and the name of the file read for that process. If the disk is idle, GetDisk returns the default FileReadRequest object (with PID 0 and empty string in fileName)
     std::deque<FileReadRequest> GetDiskQueue(int diskNumber); //GetDiskQueue returns the I/O-queue of the specified disk starting from the “next to be served” process.
   private:  
-    CPUManager CPU;
-    DiskManager disks;
-    MemoryManager RAM;
-    std::vector<Process> allProcesses;
+    int numberOfDisks_ = 0;
+    unsigned long long amountOfRam_ = 0; 
+    unsigned int pageSize_ = 0;
+    CPUManager CPU_;
+    DiskManager disks_;
+    MemoryManager RAM_;
 };
-
 #endif

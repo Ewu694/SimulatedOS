@@ -1,12 +1,13 @@
 //Eric Wu
-#ifndef MEMORYMANAGER_H
-#define MEMORYMANAGER_H
+
+#ifndef MEMORY_MANAGER
+#define MEMORY_MANAGER
 
 #include <vector>
-#include <deque>
-#include "Process.h"
+#include <limits.h>
 
-struct MemoryItem{
+struct MemoryItem
+{
     unsigned long long pageNumber;
     unsigned long long frameNumber;
     int PID; // PID of the process using this frame of memory
@@ -14,24 +15,25 @@ struct MemoryItem{
 
 using MemoryUsage = std::vector<MemoryItem>;
 
-class MemoryManager{
-public:
-    unsigned long long getRAMSize() const;
-    MemoryUsage getMemoryUsage() const;
-    unsigned int getPageSize() const;
-    unsigned long long getPageNumber(const unsigned long long &address);
-    unsigned long long getNumPages();
-    void setNumPages(const unsigned long long &amountOfRAM, const unsigned int &pageSize);
-    void setRAMSize(const unsigned long long &ramSize); //set
-    void setMemoryUsage(const MemoryUsage &memory);
-    void setPageSize(const unsigned int &pageS);
-    void accessAddress(const int &processID, const unsigned long long &address);
-    void clearMemory(const int &processID);
-private:
-    std::deque<unsigned long long> usedFrames;
-    unsigned long long ramSize;
-    unsigned int pageSize;
-    unsigned int numPages;
-    MemoryUsage memory;
+class MemoryManager
+{
+    public:
+        int getProcessPID(int index);
+        unsigned long long getProcessPageNumber(int index);
+        void setAmountOfRAM(unsigned long long amountOfRAM);
+        void setPageSize(unsigned int pageSize);
+        void createPageTable();
+        void accessMemoryAddress(int PID, unsigned long long address);
+        MemoryUsage getMemory();
+        void removePageTableFrame(int PID);
+    private:
+        unsigned long long amountOfRAM_ = 0;
+        unsigned int pageSize_ = 0;
+        MemoryUsage pageTable_;
+        int frameUseCounter_ = 0;
+        std::vector<int> recentlyUsedFrames_;
+        MemoryUsage currentlyUsedFrames_;
 };
+
+
 #endif
