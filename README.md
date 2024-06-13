@@ -1,5 +1,5 @@
 # Simulated Operating System
-A simulation of a operating system made using C++. This simulation of the operating system includes CPU, Memory, and Disk functions performed by the operating system <br>
+A simulation of a operating system made using C++. This simulation of the operating system includes CPU, Memory, and Disk functions performed by the operating system and includes a test file to demonstrate these OS functions to help users visualize these operating system operations. <br>
 This was done without the use of:
 - The goto operator
 - Non-constant global variables
